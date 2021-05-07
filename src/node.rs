@@ -145,6 +145,11 @@ impl<'src> Node<'src> for UnresolvedRecipe<'src> {
         dependencies.push_mut(d);
       }
 
+      if let Some(subsequent) = &self.subsequent {
+        dependencies.push_mut(Tree::atom("&&"));
+        dependencies.push_mut(subsequent.recipe.lexeme());
+      }
+
       t.push_mut(dependencies);
     }
 

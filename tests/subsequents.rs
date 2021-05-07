@@ -31,3 +31,22 @@ test! {
     false
   ",
 }
+
+test! {
+  name: recipe_may_have_self_as_subsequent,
+  justfile: r#"
+    set positional-arguments
+
+    @foo arg='x': && (foo arg + "x")
+      echo {{arg}}
+      if [{{arg}} == xxxxx]; then false; fi
+  "#,
+  stdout: "
+    x
+    xx
+    xxx
+    xxxx
+    xxxxx
+  ",
+  stderr: "",
+}

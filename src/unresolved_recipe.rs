@@ -6,8 +6,16 @@ impl<'src> UnresolvedRecipe<'src> {
   pub(crate) fn resolve(
     self,
     resolved: Vec<Rc<Recipe<'src>>>,
+    subsequent: Option<Rc<Recipe<'src>>>,
   ) -> CompilationResult<'src, Recipe<'src>> {
-    assert_eq!(self.dependencies.len(), resolved.len());
+    assert_eq!(
+      self.dependencies.len(),
+      resolved.len(),
+      "UnresolvedRecipe::resolve: dependency count not equal to resolved count: {} != {}",
+      self.dependencies.len(),
+      resolved.len()
+    );
+
     for (unresolved, resolved) in self.dependencies.iter().zip(&resolved) {
       assert_eq!(unresolved.recipe.lexeme(), resolved.name.lexeme());
       if !resolved
@@ -35,15 +43,27 @@ impl<'src> UnresolvedRecipe<'src> {
       })
       .collect();
 
+    let subsequent = match (self.subsequent, subsequent) {
+      (Some(unresolved), Some(resolved)) => Some(Dependency {
+        recipe:    resolved,
+        arguments: unresolved.arguments,
+      }),
+      (None, None) => None,
+      (None, Some(_)) =>
+        panic!("UnresolvedRecipe::resolve: resolved subsequent passed when none expected"),
+      (Some(_), None) => panic!("UnresolvedRecipe::resolve: resolved subsequent expected"),
+    };
+
     Ok(Recipe {
-      doc: self.doc,
       body: self.body,
+      doc: self.doc,
       name: self.name,
       parameters: self.parameters,
       private: self.private,
       quiet: self.quiet,
       shebang: self.shebang,
       dependencies,
+      subsequent,
     })
   }
 }

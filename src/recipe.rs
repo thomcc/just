@@ -25,15 +25,15 @@ fn error_from_signal(
 /// A recipe, e.g. `foo: bar baz`
 #[derive(PartialEq, Debug)]
 pub(crate) struct Recipe<'src, D = Dependency<'src>> {
-  pub(crate) dependencies: Vec<D>,
-  // pub(crate) subsequent:   Option<D>,
-  pub(crate) doc:          Option<&'src str>,
   pub(crate) body:         Vec<Line<'src>>,
+  pub(crate) dependencies: Vec<D>,
+  pub(crate) doc:          Option<&'src str>,
   pub(crate) name:         Name<'src>,
   pub(crate) parameters:   Vec<Parameter<'src>>,
   pub(crate) private:      bool,
   pub(crate) quiet:        bool,
   pub(crate) shebang:      bool,
+  pub(crate) subsequent:   Option<D>,
 }
 
 impl<'src, D> Recipe<'src, D> {

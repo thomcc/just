@@ -113,9 +113,26 @@ impl<'src: 'run, 'run> RecipeResolver<'src, 'run> {
       }
     }
 
-    let resolved = Rc::new(recipe.resolve(dependencies)?);
-    self.resolved_recipes.insert(Rc::clone(&resolved));
     stack.pop();
+
+    let subsequent = if let Some(subsequent) = &recipe.subsequent {
+      let name = subsequent.recipe.lexeme();
+      if let Some(resolved) = self.resolved_recipes.get(name) {
+        Some(Rc::clone(&resolved))
+      } else if let Some(unresolved) = self.unresolved_recipes.remove(name) {
+        Some(self.resolve_recipe(stack, unresolved)?)
+      } else {
+        return Err(subsequent.recipe.error(UnknownDependency {
+          recipe:  recipe.name(),
+          unknown: name,
+        }));
+      }
+    } else {
+      None
+    };
+
+    let resolved = Rc::new(recipe.resolve(dependencies, subsequent)?);
+    self.resolved_recipes.insert(Rc::clone(&resolved));
     Ok(resolved)
   }
 }
