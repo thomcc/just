@@ -44,10 +44,26 @@ impl<'src> UnresolvedRecipe<'src> {
       .collect();
 
     let subsequent = match (self.subsequent, subsequent) {
-      (Some(unresolved), Some(resolved)) => Some(Dependency {
-        recipe:    resolved,
-        arguments: unresolved.arguments,
-      }),
+      (Some(unresolved), Some(resolved)) => {
+        assert_eq!(unresolved.recipe.lexeme(), resolved.name.lexeme());
+        if !resolved
+          .argument_range()
+          .contains(&unresolved.arguments.len())
+        {
+          return Err(unresolved.recipe.error(
+            CompilationErrorKind::DependencyArgumentCountMismatch {
+              dependency: unresolved.recipe.lexeme(),
+              found:      unresolved.arguments.len(),
+              min:        resolved.min_arguments(),
+              max:        resolved.max_arguments(),
+            },
+          ));
+        }
+        Some(Dependency {
+          recipe:    resolved,
+          arguments: unresolved.arguments,
+        })
+      },
       (None, None) => None,
       (None, Some(_)) =>
         panic!("UnresolvedRecipe::resolve: resolved subsequent passed when none expected"),
