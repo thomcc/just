@@ -479,8 +479,8 @@ impl<'src> Lexer<'src> {
   /// Lex token beginning with `start` outside of a recipe body
   fn lex_normal(&mut self, start: char) -> CompilationResult<'src, ()> {
     match start {
-      '&' => self.lex_ampersand(),
-      '!' => self.lex_bang(),
+      '&' => self.lex_digraph('&', '&', AmpersandAmpersand),
+      '!' => self.lex_digraph('!', '=', BangEquals),
       '*' => self.lex_single(Asterisk),
       '$' => self.lex_single(Dollar),
       '@' => self.lex_single(At),
@@ -680,6 +680,7 @@ impl<'src> Lexer<'src> {
     !self.open_delimiters.is_empty()
   }
 
+  /// Lex a two-character digraph
   fn lex_digraph(
     &mut self,
     left: char,
@@ -692,43 +693,17 @@ impl<'src> Lexer<'src> {
       self.token(token);
       Ok(())
     } else {
-      todo!()
-    }
-  }
-
-  /// Lex a token starting with '&'
-  fn lex_ampersand(&mut self) -> CompilationResult<'src, ()> {
-    self.presume('&')?;
-
-    if self.next_is('&') {
-      self.presume('&')?;
-      self.token(AmpersandAmpersand);
-      Ok(())
-    } else {
-      self.advance()?;
-      Err(self.error(UnexpectedCharacter { expected: '&' }))
-    }
-  }
-
-  /// Lex a token starting with '!'
-  fn lex_bang(&mut self) -> CompilationResult<'src, ()> {
-    self.presume('!')?;
-
-    if self.accepted('=')? {
-      self.token(BangEquals);
-      Ok(())
-    } else {
       // Emit an unspecified token to consume the current character,
       self.token(Unspecified);
 
       if self.at_eof() {
-        return Err(self.error(UnexpectedEndOfToken { expected: '=' }));
+        return Err(self.error(UnexpectedEndOfToken { expected: right }));
       }
 
       // …and advance past another character,
       self.advance()?;
       // …so that the error we produce highlights the unexpected character.
-      Err(self.error(UnexpectedCharacter { expected: '=' }))
+      Err(self.error(UnexpectedCharacter { expected: right }))
     }
   }
 
@@ -2148,16 +2123,6 @@ mod tests {
   }
 
   error! {
-    name:   unknown_start_of_token_ampersand,
-    input:  " \r\n&",
-    offset: 3,
-    line:   1,
-    column: 0,
-    width:  1,
-    kind:   UnknownStartOfToken,
-  }
-
-  error! {
     name:   unknown_start_of_token_tilde,
     input:  "~",
     offset: 0,
@@ -2292,6 +2257,29 @@ mod tests {
     width:  1,
     kind:   UnexpectedCharacter {
       expected: '=',
+    },
+  }
+
+  error! {
+    name:   ampersand_eof,
+    input:  "&",
+    offset: 1,
+    line:   0,
+    column: 1,
+    width:  0,
+    kind:   UnexpectedEndOfToken {
+      expected: '&',
+    },
+  }
+  error! {
+    name:   ampersand_unexpected,
+    input:  "&%",
+    offset: 1,
+    line:   0,
+    column: 1,
+    width:  1,
+    kind:   UnexpectedCharacter {
+      expected: '&',
     },
   }
 
