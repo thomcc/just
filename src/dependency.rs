@@ -6,6 +6,16 @@ pub(crate) struct Dependency<'src> {
   pub(crate) arguments: Vec<Expression<'src>>,
 }
 
+// TODO:
+// clean up
+
+enum DependencyType {
+  Prior,
+  Subsequent,
+}
+
+// foo: (&& a && b && c) || d
+
 impl<'src> Display for Dependency<'src> {
   fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
     if self.arguments.is_empty() {

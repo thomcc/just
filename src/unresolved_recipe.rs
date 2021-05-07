@@ -70,6 +70,10 @@ impl<'src> UnresolvedRecipe<'src> {
       (Some(_), None) => panic!("UnresolvedRecipe::resolve: resolved subsequent expected"),
     };
 
+    // TODO:
+    // There's a lot of duplication here. Perhaps I should
+    // treat subsequents as a kind of dependency.
+
     Ok(Recipe {
       body: self.body,
       doc: self.doc,
