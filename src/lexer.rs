@@ -680,6 +680,22 @@ impl<'src> Lexer<'src> {
     !self.open_delimiters.is_empty()
   }
 
+  fn lex_digraph(
+    &mut self,
+    left: char,
+    right: char,
+    token: TokenKind,
+  ) -> CompilationResult<'src, ()> {
+    self.presume(left)?;
+
+    if self.accepted(right)? {
+      self.token(token);
+      Ok(())
+    } else {
+      todo!()
+    }
+  }
+
   /// Lex a token starting with '&'
   fn lex_ampersand(&mut self) -> CompilationResult<'src, ()> {
     self.presume('&')?;
