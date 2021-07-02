@@ -1,5 +1,5 @@
 fn main() {
-  if let Err(code) = just::run() {
-    std::process::exit(code);
+  if let Err(error) = just::run(std::env::args_os()) {
+    std::process::exit(error.code());
   }
 }
